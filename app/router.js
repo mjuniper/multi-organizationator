@@ -7,6 +7,8 @@ const Router = Ember.Router.extend({
 });
 
 Router.map(function() {
+  this.route('enterprise');
+  this.route('community');
 });
 
 export default Router;

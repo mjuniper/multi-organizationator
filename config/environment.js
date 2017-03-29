@@ -6,6 +6,15 @@ module.exports = function(environment) {
     environment: environment,
     rootURL: '/',
     locationType: 'auto',
+    torii: {
+      sessionServiceName: 'session',
+      providers: {
+       'arcgis-oauth-bearer': {
+          apiKey: 'fVNWb7GlPzbD2AJp',
+          portalUrl: 'https://devext.arcgis.com'
+        }
+      }
+    },
     EmberENV: {
       FEATURES: {
         // Here you can enable experimental features on an ember canary build
