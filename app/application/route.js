@@ -11,7 +11,7 @@ export default Ember.Route.extend({
       .then(() => {
         Ember.debug('User has been automatically logged in... ');
       })
-      .catch((/*err*/) => {
+      .catch((/* err */) => {
         // we want to catch this, otherwise Ember will redirect to an error route!
         Ember.debug('No cookie was found, user is anonymous... ');
       });
@@ -22,10 +22,10 @@ export default Ember.Route.extend({
       this.get('session').open('arcgis-oauth-bearer')
         .then((authorization) => {
           Ember.debug('AUTH SUCCESS: ', authorization);
-          //transition to some secured route or... so whatever is needed
+          // transition to some secured route or... so whatever is needed
           this.transitionTo('index');
         })
-        .catch((err)=>{
+        .catch((err) => {
           Ember.debug('AUTH ERROR: ', err);
         });
     },

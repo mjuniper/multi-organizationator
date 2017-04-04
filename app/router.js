@@ -6,9 +6,10 @@ const Router = Ember.Router.extend({
   rootURL: config.rootURL
 });
 
-Router.map(function() {
+Router.map(function () {
   this.route('enterprise');
   this.route('community');
+  this.route('sign-in');
 });
 
 export default Router;

@@ -1,6 +1,6 @@
 /* jshint node: true */
 
-module.exports = function(environment) {
+module.exports = function (environment) {
   var ENV = {
     modulePrefix: 'multiple-orgs',
     environment: environment,
@@ -9,8 +9,8 @@ module.exports = function(environment) {
     torii: {
       sessionServiceName: 'session',
       providers: {
-       'arcgis-oauth-bearer': {
-          apiKey: 'fVNWb7GlPzbD2AJp',
+        'arcgis-oauth-bearer': {
+          apiKey: 'jJSYpDe6LdG5yRqo', // 'fVNWb7GlPzbD2AJp',
           portalUrl: 'https://devext.arcgis.com'
         }
       }
@@ -29,6 +29,13 @@ module.exports = function(environment) {
     APP: {
       // Here you can pass flags/options to your application instance
       // when it is created
+      portalUrl: 'https://devext.arcgis.com',
+      communityOrg: {
+        orgId: 'AIyk0p60t3g2IOlP',
+        portalHostname: 'flying6114.mapsdevext.arcgis.com',
+        username: 'flying6114',
+        password: 'flying123'
+      }
     }
   };
 
