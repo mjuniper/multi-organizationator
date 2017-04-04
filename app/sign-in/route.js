@@ -20,7 +20,7 @@ export default Ember.Route.extend({
 
     const url = ENV.APP.portalUrl;
     const params = {
-      client_id: 'arcgisonline',
+      client_id: 'jJSYpDe6LdG5yRqo',
       prepopulatedusername: communityOrgUsername,
       force_login: true,
       response_type: 'token',
