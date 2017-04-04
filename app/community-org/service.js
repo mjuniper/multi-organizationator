@@ -1,77 +1,72 @@
 import Ember from 'ember';
 import fetch from 'ember-network/fetch';
-import ENV from 'multiple-orgs/config/environment';
+import ENV from 'multi-organizationator/config/environment';
 
 export default Ember.Service.extend({
 
   itemsService: Ember.inject.service(),
 
   init () {
-    if (this.get('storeTokenInLocalStorage')) {
-      const token = window.localStorage.getItem(this.get('localStorageKey'));
-      if (token) {
-        this.set('_token', token);
+    const tokenInfoStr = window.localStorage.getItem(this.get('localStorageKey'));
+    if (tokenInfoStr) {
+      const tokenInfo = JSON.parse(tokenInfoStr);
+      if (tokenInfo && tokenInfo.expires) {
+        if (Date.now() < tokenInfo.expires) {
+          this.set('tokenInfo', tokenInfo);
+        }
       }
     }
   },
 
-  storeTokenInLocalStorage: false,
-
-  useGenerateToken: false,
-
   localStorageKey: 'community-org-token-key',
 
-  token: Ember.computed('_token', {
+  tokenInfo: Ember.computed('_tokenInfo', {
     get () {
-      return this.get('_token');
+      return this.get('_tokenInfo');
     },
-    set (key, token) {
-      this.set('_token', token);
-      if (this.get('storeTokenInLocalStorage')) {
-        window.localStorage.setItem(this.get('localStorageKey'), token);
+    set (key, tokenInfo) {
+      this.set('_tokenInfo', tokenInfo);
+      window.localStorage.setItem(this.get('localStorageKey'), JSON.stringify(tokenInfo));
+      if (tokenInfo.expires) {
+        const expiresIn = tokenInfo.expires - Date.now() - 2000;
+        Ember.run.later(() => { this.set('_tokenInfo', null); }, expiresIn);
       }
-      return token;
+      return tokenInfo;
     }
   }),
 
-  hasToken: Ember.computed.notEmpty('_token'),
+  token: Ember.computed.reads('tokenInfo.access_token'),
 
-  getToken () {
-    const token = this.get('token');
-    if (token) { return Ember.RSVP.resolve({ token: token }); }
+  isAuthenticated: Ember.computed.notEmpty('token'),
 
-    const generateTokenUrl = `${ENV.APP.portalUrl}/sharing/rest/generateToken`;
+  getPortalInfo () {
+    const portalInfo = this.get('portalInfo');
+    if (portalInfo) {
+      return Ember.RSVP.resolve(portalInfo);
+    }
 
-    const body = this._encodeForm({
-      username: ENV.APP.communityOrg.username,
-      password: ENV.APP.communityOrg.password,
-      referer: window.location.origin,
-      f: 'json'
-    });
-
-    const opts = {
-      method: 'POST',
-      headers: {
-        'Accept': 'application/json, application/xml, text/plain, text/html, *.*',
-        'Content-Type': 'application/x-www-form-urlencoded'
-      },
-      body: body
-    };
-
-    return fetch(generateTokenUrl, opts)
+    const portalSelfUrl = `${ENV.APP.portalUrl}/sharing/rest/portals/self?f=json&token=${this.get('token')}`;
+    return fetch(portalSelfUrl)
       .then((response) => response.json())
-      .then((tokenInfo) => {
-        this.set('token', tokenInfo.token);
-        return tokenInfo;
+      .then((portalInfo) => {
+        if (portalInfo && !portalInfo.error) {
+          this.set('portalInfo', portalInfo);
+          return portalInfo;
+        }
       });
   },
 
   getPortalOptions () {
-    return this.getToken()
-      .then((tokenInfo) => {
+    return this.getPortalInfo()
+      .then((portalInfo) => {
+        let portalHostname = portalInfo.portalHostname;
+        if (portalInfo.urlKey) {
+          portalHostname = `${portalInfo.urlKey}.${portalInfo.customBaseUrl}`;
+        }
+
         return {
-          portalHostname: ENV.APP.communityOrg.portalHostname,
-          token: tokenInfo.token
+          portalHostname: portalHostname,
+          token: this.get('token')
         };
       });
   },
@@ -82,12 +77,6 @@ export default Ember.Service.extend({
         return this.get('itemsService')
           .search({ q: 'access:private' }, portalOpts);
       });
-  },
-
-  _encodeForm (formData) {
-    return Object.keys(formData).map((key) => {
-      return [key, formData[key]].map(encodeURIComponent).join('=');
-    }).join('&');
   }
 
 });

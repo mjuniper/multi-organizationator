@@ -3,15 +3,24 @@
 <html>
   <head>
     <script>
-      // try to match an access token in window.location.hash
-      var match = (window.location.hash) ? window.location.hash.match(/#access_token=([^&]+)/) : false;
-      // if we found an access token in the URL pass the token up to a global function in
-      var token = match[1];
-      if (token) {
-        var parentWindow = (window.opener && window.opener.parent) ? window.opener.parent : window
-        parentWindow.__communityOrgSigninCallback(token);
+      try {
+        const tokenInfo = location.hash.substr(1).split('&').reduce(function (acc, item) {
+          const terms = item.split('=');
+          acc[terms[0]] = terms[1];
+          return acc;
+        }, {})
+
+        // if we found an access token in the URL pass the token up to a global function in
+        if (tokenInfo.access_token) {
+          if (tokenInfo.expires_in) {
+            tokenInfo.expires = Date.now() + (tokenInfo.expires_in * 1000);
+          }
+          var parentWindow = (window.opener && window.opener.parent) ? window.opener.parent : window
+          parentWindow.__communityOrgSigninCallback(tokenInfo);
+        }
+      } finally {
+        window.close();
       }
-      window.close();
     </script>
   </head>
   <body>
