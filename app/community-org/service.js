@@ -6,6 +6,8 @@ export default Ember.Service.extend({
 
   itemsService: Ember.inject.service(),
 
+  session: Ember.inject.service(),
+
   init () {
     const tokenInfoStr = window.localStorage.getItem(this.get('localStorageKey'));
     if (tokenInfoStr) {
@@ -17,6 +19,31 @@ export default Ember.Service.extend({
       }
     }
   },
+
+  forcePopout: false,
+
+  useIFrame: Ember.computed('forceIFrame', function () {
+    if (this.get('forcePopout')) { return false; }
+    return location.hostname.includes('arcgis.com');
+  }),
+
+  oAuthParams: Ember.computed('property', function () {
+    const communityOrgUsername = this.get('session.portal.portalProperties.hub.communityOrg.username');
+    const redirectUri = `${location.origin}/signin-callback.html`;
+
+    return {
+      client_id: ENV.torii.providers['arcgis-oauth-bearer'].apiKey,
+      prepopulatedusername: communityOrgUsername,
+      force_login: true,
+      response_type: 'token',
+      expiration: 20160,
+      // display: 'iframe' | 'default',
+      showSocialLogins: true,
+      // locale: '',
+      parent: encodeURIComponent(location.origin),
+      redirect_uri: encodeURIComponent(redirectUri)
+    };
+  }),
 
   localStorageKey: 'community-org-token-key',
 

@@ -15,7 +15,7 @@
           if (tokenInfo.expires_in) {
             tokenInfo.expires = Date.now() + (tokenInfo.expires_in * 1000);
           }
-          var parentWindow = (window.opener && window.opener.parent) ? window.opener.parent : window
+          var parentWindow = (window.opener && window.opener.parent) ? window.opener.parent : window.parent || window;
           parentWindow.__communityOrgSigninCallback(tokenInfo);
         }
       } finally {

@@ -5,35 +5,35 @@ export default Ember.Route.extend({
 
   communityOrgService: Ember.inject.service('community-org'),
 
+  cookies: Ember.inject.service(),
+
   beforeModel () {
+    // save the cookie cuz it's about to get stepped on
+    const esriAuthCookie = this.get('cookies').read('esri_auth');
+    this.set('esri_auth', esriAuthCookie);
+
     window.__communityOrgSigninCallback = Ember.run.bind(this, this.setToken);
-    window.open(this.get('authorizeUrl'), 'oauth-window', 'height=400,width=600,menubar=no,location=yes,resizable=yes,scrollbars=yes,status=yes');
+    if (!this.get('communityOrgService.useIFrame')) {
+      window.open(this.get('authorizeUrl'), 'oauth-window', 'height=400,width=600,menubar=no,location=yes,resizable=yes,scrollbars=yes,status=yes');
+    }
   },
 
   setToken (tokenInfo) {
     this.set('communityOrgService.tokenInfo', tokenInfo);
+
+    // when we logged on via iframe, our cookie got stepped on... switch it back!
+    const esriAuthCookie = this.get('esri_auth');
+    this.get('cookies').write('esri_auth', esriAuthCookie, { domain: 'arcgis.com' });
+
     this.transitionTo('community');
   },
 
   authorizeUrl: Ember.computed('redirectUri', function () {
-    const communityOrgUsername = this.get('session.portal.portalProperties.hub.communityOrg.username');
-
     const url = ENV.APP.portalUrl;
-    const params = {
-      client_id: 'jJSYpDe6LdG5yRqo',
-      prepopulatedusername: communityOrgUsername,
-      force_login: true,
-      response_type: 'token',
-      expiration: 20160,
-      display: 'default',
-      redirect_uri: encodeURIComponent(this.get('redirectUri'))
-    };
+    // const url = 'https://flying6114.mapsdevext.arcgis.com';
+    const params = this.get('communityOrgService.oAuthParams');
     var qryString = Object.entries(params).map((item) => item.join('=')).join('&');
     return `${url}/sharing/rest/oauth2/authorize?${qryString}`;
-  }),
-
-  redirectUri: Ember.computed(function () {
-    return `${location.origin}/signin-callback.html`;
-  }),
+  })
 
 });

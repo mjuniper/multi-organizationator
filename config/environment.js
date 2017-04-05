@@ -10,7 +10,7 @@ module.exports = function (environment) {
       sessionServiceName: 'session',
       providers: {
         'arcgis-oauth-bearer': {
-          apiKey: 'jJSYpDe6LdG5yRqo', // 'fVNWb7GlPzbD2AJp',
+          apiKey: 'arcgisonline', // 'fVNWb7GlPzbD2AJp',
           portalUrl: 'https://devext.arcgis.com'
         }
       }
@@ -53,7 +53,7 @@ module.exports = function (environment) {
   }
 
   if (environment === 'production') {
-
+    ENV.torii.providers['arcgis-oauth-bearer'].apiKey = 'fVNWb7GlPzbD2AJp';
   }
 
   return ENV;
