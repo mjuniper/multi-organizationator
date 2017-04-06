@@ -5,6 +5,7 @@ export default Ember.Route.extend({
   itemsService: Ember.inject.service(),
 
   model () {
+    // if you are not logged in to the enterprise org, show an error
     if (!this.get('session.isAuthenticated')) {
       return {
         error: { message: 'You must be logged in.' }

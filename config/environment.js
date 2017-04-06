@@ -10,7 +10,7 @@ module.exports = function (environment) {
       sessionServiceName: 'session',
       providers: {
         'arcgis-oauth-bearer': {
-          apiKey: 'arcgisonline', // 'fVNWb7GlPzbD2AJp',
+          apiKey: 'arcgisonline',
           portalUrl: 'https://devext.arcgis.com'
         }
       }

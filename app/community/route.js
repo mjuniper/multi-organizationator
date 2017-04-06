@@ -4,21 +4,17 @@ export default Ember.Route.extend({
 
   communityOrgService: Ember.inject.service('community-org'),
 
-  // beforeModel () {
-  //   if (!this.get('communityOrgService.isAuthenticated')) {
-  //     this.transitionTo('sign-in');
-  //   }
-  // },
-
   model () {
+    // if you are not logged in to the enterprise org, show an error
     if (!this.get('session.isAuthenticated')) {
       return {
         error: { message: 'You must be logged in.' }
       };
     }
 
+    // if you are not logged in to the community org, redirect to sign-in
     if (!this.get('communityOrgService.isAuthenticated')) {
-      this.transitionTo('sign-in');
+      return this.transitionTo('sign-in');
     }
 
     return this.get('communityOrgService').getItems()

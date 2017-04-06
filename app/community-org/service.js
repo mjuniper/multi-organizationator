@@ -20,30 +20,75 @@ export default Ember.Service.extend({
     }
   },
 
+  // just a property we can increment to get the login iframe to rerender
+  sessionId: 0,
+
+  // need to be able to force it to use popout for development
   forcePopout: false,
 
-  useIFrame: Ember.computed('forceIFrame', function () {
-    if (this.get('forcePopout')) { return false; }
-    return location.hostname.includes('arcgis.com');
+  usePopout: Ember.computed('forcePopout', function () {
+    const forcePopout = this.get('forcePopout');
+    const isArcGis = location.hostname.includes('arcgis.com');
+    return forcePopout || !isArcGis;
   }),
 
-  oAuthParams: Ember.computed('property', function () {
-    const communityOrgUsername = this.get('session.portal.portalProperties.hub.communityOrg.username');
+  useIFrame: Ember.computed.not('usePopout'),
+
+  oAuthParams: Ember.computed('session', 'useIFrame', 'sessionId', function () {
+    const communityOrgUsername = this.get('session.portal.portalProperties.hub.settings.communityOrg.username');
     const redirectUri = `${location.origin}/signin-callback.html`;
+    const useIFrame = this.get('useIFrame');
 
     return {
       client_id: ENV.torii.providers['arcgis-oauth-bearer'].apiKey,
       prepopulatedusername: communityOrgUsername,
-      force_login: true,
       response_type: 'token',
       expiration: 20160,
-      // display: 'iframe' | 'default',
+      display: useIFrame ? 'iframe' : 'default',
       showSocialLogins: true,
       // locale: '',
+      sessionId: this.get('sessionId'),
       parent: encodeURIComponent(location.origin),
       redirect_uri: encodeURIComponent(redirectUri)
     };
   }),
+
+  authorizeUrl: Ember.computed('oAuthParams', function () {
+    const params = this.get('oAuthParams');
+
+    let url = ENV.APP.portalUrl;
+    const communtityOrgPortalHostname = this.get('session.portal.portalProperties.hub.settings.communityOrg.portalHostname');
+    if (communtityOrgPortalHostname) {
+      url = url = `https://${communtityOrgPortalHostname}`;
+    } else {
+      // if we don't have the portalHostname of the community org, we need to make sure we get logged in to the right org
+      params.force_login = true;
+    }
+
+    var qryString = Object.entries(params).map((item) => item.join('=')).join('&');
+    return `${url}/sharing/rest/oauth2/authorize?${qryString}`;
+  }),
+
+  validateOrg (tokenInfo) {
+    // validate that they logged in to the right org as the right user
+    // it would be better to refactor this so we do not have to set it, only to maybe unset it below...
+    this.set('tokenInfo', tokenInfo);
+    return this.getPortalInfo()
+    .then((portalInfo) => {
+      const communityOrgInfo = this.get('session.portal.portalProperties.hub.settings.communityOrg');
+      // we want to validate that the orgId and the username are the same
+      if (portalInfo.id === communityOrgInfo.orgId && portalInfo.user.username === communityOrgInfo.username) {
+        return Ember.RSVP.resolve(tokenInfo);
+      } else {
+        // overwrite the tokenInfo we just set because it's the wrong one
+        this.setProperties({
+          tokenInfo: {},
+          portalInfo: null
+        });
+        return Ember.RSVP.reject();
+      }
+    });
+  },
 
   localStorageKey: 'community-org-token-key',
 

@@ -1,3 +1,6 @@
 {{#if communityOrgService.useIFrame}}
-  <iframe src="{{iframeSrc}}" width="600" height="450"></iframe>
+  {{#if error}}
+    <div class="alert alert-danger" role="alert">{{error.message}}</div>
+  {{/if}}
+  <iframe src="{{iFrameSrc}}" width="600" height="450"></iframe>
 {{/if}}
