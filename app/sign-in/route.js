@@ -8,8 +8,8 @@ export default Ember.Route.extend({
 
   beforeModel () {
     // save the cookie cuz it's about to get stepped on
-    const esriAuthCookie = this.get('cookies').read('esri_auth');
-    this.set('esri_auth', esriAuthCookie);
+    // const esriAuthCookie = this.get('cookies').read('esri_auth');
+    // this.set('esri_auth', esriAuthCookie);
 
     // we need a function in the global scope that the redirect_uri page can call
     window.__communityOrgSigninCallback = Ember.run.bind(this, this.setToken);
@@ -23,8 +23,8 @@ export default Ember.Route.extend({
 
   setToken (tokenInfo) {
     // when we logged on via iframe, our cookie got stepped on... switch it back!
-    const esriAuthCookie = this.get('esri_auth');
-    this.get('cookies').write('esri_auth', esriAuthCookie, { domain: 'arcgis.com' });
+    // const esriAuthCookie = this.get('esri_auth');
+    // this.get('cookies').write('esri_auth', esriAuthCookie, { domain: 'arcgis.com' });
 
     // validate that they logged in to the right org as the right user
     const communityOrgService = this.get('communityOrgService');

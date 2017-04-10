@@ -36,7 +36,8 @@ export default Ember.Service.extend({
 
   oAuthParams: Ember.computed('session', 'useIFrame', 'sessionId', function () {
     const communityOrgUsername = this.get('session.portal.portalProperties.hub.settings.communityOrg.username');
-    const redirectUri = `${location.origin}/signin-callback.html`;
+    const origin = `${location.protocol}//${location.host}`;
+    const redirectUri = `${origin}/signin-callback.html`;
     const useIFrame = this.get('useIFrame');
 
     return {
@@ -47,9 +48,10 @@ export default Ember.Service.extend({
       display: useIFrame ? 'iframe' : 'default',
       showSocialLogins: true,
       // locale: '',
+      linkUserRequest: true, // if true, platform cookie will not be set
       sessionId: this.get('sessionId'),
-      parent: encodeURIComponent(location.origin),
-      redirect_uri: encodeURIComponent(redirectUri)
+      parent: origin,
+      redirect_uri: redirectUri
     };
   }),
 
@@ -119,36 +121,36 @@ export default Ember.Service.extend({
 
     const portalSelfUrl = `${ENV.APP.portalUrl}/sharing/rest/portals/self?f=json&token=${this.get('token')}`;
     return fetch(portalSelfUrl)
-      .then((response) => response.json())
-      .then((portalInfo) => {
-        if (portalInfo && !portalInfo.error) {
-          this.set('portalInfo', portalInfo);
-          return portalInfo;
-        }
-      });
+    .then((response) => response.json())
+    .then((portalInfo) => {
+      if (portalInfo && !portalInfo.error) {
+        this.set('portalInfo', portalInfo);
+        return portalInfo;
+      }
+    });
   },
 
   getPortalOptions () {
     return this.getPortalInfo()
-      .then((portalInfo) => {
-        let portalHostname = portalInfo.portalHostname;
-        if (portalInfo.urlKey) {
-          portalHostname = `${portalInfo.urlKey}.${portalInfo.customBaseUrl}`;
-        }
+    .then((portalInfo) => {
+      let portalHostname = portalInfo.portalHostname;
+      if (portalInfo.urlKey) {
+        portalHostname = `${portalInfo.urlKey}.${portalInfo.customBaseUrl}`;
+      }
 
-        return {
-          portalHostname: portalHostname,
-          token: this.get('token')
-        };
-      });
+      return {
+        portalHostname: portalHostname,
+        token: this.get('token')
+      };
+    });
   },
 
   getItems () {
     return this.getPortalOptions()
-      .then((portalOpts) => {
-        return this.get('itemsService')
-          .search({ q: 'access:private' }, portalOpts);
-      });
+    .then((portalOpts) => {
+      return this.get('itemsService')
+        .search({ q: 'access:private' }, portalOpts);
+    });
   }
 
 });
