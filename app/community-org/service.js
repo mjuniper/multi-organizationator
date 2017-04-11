@@ -20,6 +20,13 @@ export default Ember.Service.extend({
     }
   },
 
+  reset () {
+    this.setProperties({
+      tokenInfo: null,
+      portalInfo: null
+    });
+  },
+
   // just a property we can increment to get the login iframe to rerender
   sessionId: 0,
 
@@ -84,7 +91,7 @@ export default Ember.Service.extend({
       } else {
         // overwrite the tokenInfo we just set because it's the wrong one
         this.setProperties({
-          tokenInfo: {},
+          tokenInfo: null,
           portalInfo: null
         });
         return Ember.RSVP.reject();
@@ -100,10 +107,14 @@ export default Ember.Service.extend({
     },
     set (key, tokenInfo) {
       this.set('_tokenInfo', tokenInfo);
-      window.localStorage.setItem(this.get('localStorageKey'), JSON.stringify(tokenInfo));
-      if (tokenInfo.expires) {
-        const expiresIn = tokenInfo.expires - Date.now() - 2000;
-        Ember.run.later(() => { this.set('_tokenInfo', null); }, expiresIn);
+      if (tokenInfo) {
+        window.localStorage.setItem(this.get('localStorageKey'), JSON.stringify(tokenInfo));
+        if (tokenInfo.expires) {
+          const expiresIn = tokenInfo.expires - Date.now() - 2000;
+          Ember.run.later(() => { this.set('_tokenInfo', null); }, expiresIn);
+        }
+      } else {
+        localStorage.removeItem(this.get('localStorageKey'));
       }
       return tokenInfo;
     }

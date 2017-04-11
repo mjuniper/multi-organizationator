@@ -2,6 +2,8 @@ import Ember from 'ember';
 
 export default Ember.Route.extend({
 
+  communityOrgService: Ember.inject.service('community-org'),
+
   beforeModel () {
     return this._initSession();
   },
@@ -31,6 +33,7 @@ export default Ember.Route.extend({
     },
     signout () {
       this.get('session').close();
+      this.get('communityOrgService').reset();
     }
   }
 
