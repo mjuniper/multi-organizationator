@@ -9,3 +9,7 @@ body {
 .navbar {
   margin-bottom: 20px;
 }
+
+iframe {
+  border: none;
+}
